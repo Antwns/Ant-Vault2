@@ -1,11 +1,16 @@
-﻿using AntVault2Client.WindowControllers;
+﻿using AntVault2Client.Pages;
+using AntVault2Client.WindowControllers;
 using AntVault2Client.Windows;
 using SimpleTcp;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Reflection.Emit;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
 using System.Windows.Media;
 
 namespace AntVault2Client.ClientWorkers
@@ -88,6 +93,45 @@ namespace AntVault2Client.ClientWorkers
             {
                 ReceivingFriendsList = false;
             }
+            if(MessageString.StartsWith("/Message"))
+            {
+                HandleMessage(MessageString);
+            }
+        }
+
+        private static void HandleMessage(string MessageString)
+        {
+            string Sender = AuxiliaryClientWorker.GetElement(MessageString, "-U ", " -Content");
+            string Message = AuxiliaryClientWorker.GetElement(MessageString, "-Content ", ".");
+            MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+            {
+                #region Profile picture before the text
+                System.Windows.Shapes.Ellipse ImageToShowFrame = new System.Windows.Shapes.Ellipse();
+                ImageToShowFrame.Height = 30;
+                ImageToShowFrame.Width = 30;
+                ImageToShowFrame.Stroke = System.Windows.Media.Brushes.Black;
+                ImageToShowFrame.StrokeThickness = 1.5;
+                ImageBrush ImageToShowBrush = new ImageBrush(AuxiliaryClientWorker.BitmapToBitmapImage(ProfilePictures[Usernames.IndexOf(Sender)]));
+                ImageToShowFrame.Fill = ImageToShowBrush;
+                MainWindowController.ChatParagraph.Inlines.Add(ImageToShowFrame);
+                #endregion
+
+                #region Text to add after the profile picture
+                System.Windows.Controls.Label TextToShow = new System.Windows.Controls.Label();
+                TextToShow.FontSize = 16;
+                TextToShow.Foreground = System.Windows.Media.Brushes.Black;
+                TextToShow.Content = "[" + Sender + "]: " + Message;
+                #endregion
+                MainWindowController.ChatParagraph.Inlines.Add(TextToShow);
+                MainWindowController.ChatParagraph.Inlines.Add(Environment.NewLine);
+                MainWindowController.ChatDocument.Blocks.Add(MainWindowController.ChatParagraph);
+                MainWindowController.MainPage.ClientChatTextBox.Document = MainWindowController.ChatDocument;
+            });
+        }
+
+        internal static void SendMessage(string Message)
+        {
+            LoginClientWorker.AntVaultClient.Send("/Message -U " + LoginClientWorker.CurrentUser + " -Content " + Message + ".");
         }
 
         private static void GetFriendsList()

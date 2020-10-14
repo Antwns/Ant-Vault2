@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using AntVault2Client.ClientWorkers;
+using System.Windows.Controls;
 
 namespace AntVault2Client.Pages
 {
@@ -55,8 +56,11 @@ namespace AntVault2Client.Pages
 
         private void ClientChatTextBoxInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-
+            if(e.Key == System.Windows.Input.Key.Enter)
+            {
+                MainClientWorker.SendMessage(ClientChatTextBoxInput.Text);
+                ClientChatTextBoxInput.Text = null;
+            }
         }
-
     }
 }

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Documents;
 
 namespace AntVault2Client.WindowControllers
 {
@@ -13,5 +8,7 @@ namespace AntVault2Client.WindowControllers
         public static Window MainWindow = new Windows.MainWindow();
         public static Pages.MainPage MainPage = new Pages.MainPage();
         public static Pages.LoginPage LoginPage = new Pages.LoginPage();
+        public static FlowDocument ChatDocument = new FlowDocument();
+        public static Paragraph ChatParagraph = new Paragraph();
     }
 }

@@ -3,8 +3,6 @@ using System.IO;
 using AntVault2Server.DataAndResources;
 using SimpleTcp;
 using System.Threading;
-using Microsoft.Win32;
-using System.Collections.ObjectModel;
 
 namespace AntVault2Server.ServerWorkers
 {
@@ -358,7 +356,10 @@ namespace AntVault2Server.ServerWorkers
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -Content");
             string Message = AuxiliaryServerWorker.GetElement(MessageString, "-Content ", ".");
             AuxiliaryServerWorker.WriteToConsole("[" + Sender + "]: " + Message);
-            AntVaultServer.Send("*", AuxiliaryServerWorker.MessageByte(MessageString));
+            foreach (Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                AntVaultServer.Send(Sess.IpPort, AuxiliaryServerWorker.MessageByte(MessageString));
+            }
         }
 
         private static void EndSession(string MessageString, DataReceivedFromClientEventArgs Client)

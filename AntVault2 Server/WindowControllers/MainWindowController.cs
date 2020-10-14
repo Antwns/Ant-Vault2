@@ -1,6 +1,4 @@
-﻿using System.Windows;
-
-namespace AntVault2Server.WindowControllers
+﻿namespace AntVault2Server.WindowControllers
 {
     class MainWindowController
     {

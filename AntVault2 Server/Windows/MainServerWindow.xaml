@@ -26,7 +26,7 @@
                     <RowDefinition Height="34*"/>
                 </Grid.RowDefinitions>
                 <TextBox x:Name="ServerConsoleTextBox" x:FieldModifier="public" Margin="0,3,0,31" BorderBrush="{x:Null}" Text="Console textbox" Background="#FFC5DDEA" TextChanged="ServerConsoleTextBox_TextChanged" Grid.RowSpan="2" IsReadOnly="True" Loaded="ServerConsoleTextBox_Loaded"/>
-                <TextBox x:Name="ConsoleInputTextBox" Margin="0,8" Grid.Row="1" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Center" BorderBrush="{x:Null}" Height="18" TabIndex="5" KeyDown="ConsoleInputTextBox_KeyDown" Loaded="ConsoleInputTextBox_Loaded">
+                <TextBox x:Name="ConsoleInputTextBox" Margin="0,38,0,8" Grid.Row="1" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Center" BorderBrush="{x:Null}" Height="18" TabIndex="5" KeyDown="ConsoleInputTextBox_KeyDown" Loaded="ConsoleInputTextBox_Loaded">
                     <TextBox.Background>
                         <SolidColorBrush Color="White" Opacity="0.5"/>
                     </TextBox.Background>
