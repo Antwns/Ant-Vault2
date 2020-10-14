@@ -30,14 +30,14 @@ namespace AntVault2Server.ServerWorkers
             }
             return "";
         }
-        public static string ReadFromConfig(bool ReadIP, bool ReadUserDirectories)
+        public static string ReadFromConfig(bool ReadPort, bool ReadUserDirectories)
         {
             StreamReader ConfigStreamReader = new StreamReader(ConfigFileDir);
             string CurrentLine;
             int LineNumber = 0;
             while ((CurrentLine = ConfigStreamReader.ReadLine()) != null)
             {
-                if(ReadIP == true && CurrentLine.StartsWith("/Port"))
+                if(ReadPort == true && CurrentLine.StartsWith("/Port"))
                 {
                     return GetElement(CurrentLine, "/Port " ,".");
                 }

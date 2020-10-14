@@ -5,6 +5,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Drawing.Imaging;
 using System.Windows.Media.Imaging;
+using System;
 
 namespace AntVault2Client.ClientWorkers
 {

@@ -1,10 +1,10 @@
 ﻿using AntVault2Client.WindowControllers;
+using AntVault2Client.Windows;
 using SimpleTcp;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 
@@ -14,26 +14,23 @@ namespace AntVault2Client.ClientWorkers
     {
         public static Collection<string> Usernames = new Collection<string>();
         public static Collection<Bitmap> ProfilePictures = new Collection<Bitmap>();
+        public static Collection<string> FriendsList = new Collection<string>();
         static bool ReceivingProfilePictures = false;
         static bool ReceivingUsernames = false;
+        static bool ReceivingFriendsList = false;
         internal static void AntVaultClient_DataReceived(object sender, DataReceivedFromServerEventArgs e)
         {
             string MessageString = AuxiliaryClientWorker.MessageString(e.Data);
             if (MessageString.StartsWith("/AcceptConnection"))
             {
                 DoLogin(LoginClientWorker.CurrentUser);
-                Thread.Sleep(100);
                 RequestUsersList(LoginClientWorker.CurrentUser);
-                Thread.Sleep(100);
                 RequestProfilePictures(LoginClientWorker.CurrentUser);
-                Thread.Sleep(100);
-                RequestStatus(LoginClientWorker.CurrentUser);
-                Thread.Sleep(100);
-                RequestFriendsList(LoginClientWorker.CurrentUser);
             }
             if (MessageString.StartsWith("/SendStatus"))
             {
                 SetStatus(MessageString);
+                RequestFriendsList(LoginClientWorker.CurrentUser);
             }
             if(MessageString.StartsWith("/SendUsernames") || ReceivingUsernames == true && MessageString.StartsWith("/EndSendUsernames") == false)
             {
@@ -59,7 +56,6 @@ namespace AntVault2Client.ClientWorkers
                 else if (MessageString.StartsWith("/SendProfilePicures") == false && ReceivingProfilePictures == true)
                 {
                     ProfilePictures = AuxiliaryClientWorker.GetPicturesFromBytes(e.Data);
-                    MessageBox.Show(Usernames.Count.ToString() + " " + ProfilePictures.Count.ToString());
                     GetCurrentProfilePicture(LoginClientWorker.CurrentUser);
                 }
                 else
@@ -67,16 +63,48 @@ namespace AntVault2Client.ClientWorkers
                     //Do nothing
                 }
             }
+            if(MessageString.StartsWith("/SendFriendsList") || ReceivingFriendsList == true && MessageString.StartsWith("/EndSendFriendsList") == false)
+            {
+                if(MessageString.StartsWith("/SendFriendsList") == true && ReceivingFriendsList == false)
+                {
+                    ReceivingFriendsList = true;
+                }
+                else if(MessageString.StartsWith("/SendFriendsList") == false && ReceivingFriendsList == true)
+                {
+                    FriendsList = AuxiliaryClientWorker.GetStringsFromBytes(e.Data);
+                    GetFriendsList();
+                }
+            }
             if(MessageString.StartsWith("/EndSendProfilePictures"))
             {
                 ReceivingProfilePictures = false;
+                RequestStatus(LoginClientWorker.CurrentUser);
             }
             if(MessageString.StartsWith("/EndSendUsernames"))
             {
                 ReceivingUsernames = false;
             }
-
+            if(MessageString.StartsWith("/EndSendFriendsList"))
+            {
+                ReceivingFriendsList = false;
+            }
         }
+
+        private static void GetFriendsList()
+        {
+            MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+            {
+                MainWindowController.MainPage.FriendsTextBox.Text = null;
+            });
+            foreach(string Friend in FriendsList)
+            {
+                MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+                {
+                    MainWindowController.MainPage.FriendsTextBox.Text += Friend + Environment.NewLine;
+                });
+            }
+        }
+
         internal static void GetCurrentProfilePicture(string CurrentUser)
         {
             Bitmap CurrentProfilePicture = ProfilePictures[Usernames.IndexOf(CurrentUser)];

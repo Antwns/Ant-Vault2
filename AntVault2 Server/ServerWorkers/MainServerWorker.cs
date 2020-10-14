@@ -3,7 +3,8 @@ using System.IO;
 using AntVault2Server.DataAndResources;
 using SimpleTcp;
 using System.Threading;
-using System.Net;
+using Microsoft.Win32;
+using System.Collections.ObjectModel;
 
 namespace AntVault2Server.ServerWorkers
 {
@@ -281,8 +282,7 @@ namespace AntVault2Server.ServerWorkers
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             string CurrentStatus = AuxiliaryServerWorker.GetStatus(Sender);
-            AuxiliaryServerWorker.WriteToConsole("[INFO] " + Sender + " requested their status");
-            AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/SendStatus -Content" + CurrentStatus +"."));//SendStatus -Content Status.
+            AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/SendStatus -Content " + CurrentStatus +"."));//SendStatus -Content Status.
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successully sent " + Sender + "'s status");
         }
 
@@ -302,7 +302,11 @@ namespace AntVault2Server.ServerWorkers
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " requested to update their friends list");
-            AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.FriendsListBytes(AuxiliaryServerWorker.FriendsList));
+            AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/SendFriendsList"));
+            Thread.Sleep(100);
+            AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.FriendsListBytes(AuxiliaryServerWorker.GetFriendsList(Sender)));
+            Thread.Sleep(100);
+            AntVaultServer.Send(Client.IpPort,"/EndSendFriendsList");
             AuxiliaryServerWorker.WriteToConsole("[INFO Successfully updated friends list for user " + Sender);
         }
 
