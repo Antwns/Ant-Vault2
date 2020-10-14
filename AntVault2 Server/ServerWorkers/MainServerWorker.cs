@@ -346,9 +346,15 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] Profile picture update request finsihed successfully for " + Sender);
         }
 
-        private static void UpdateStatus(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void UpdateStatus(string MessageString, DataReceivedFromClientEventArgs Client)//UpdateStatus -U Username -Content Msg.
         {
-            AntVaultServer.Send("*", AuxiliaryServerWorker.MessageByte(MessageString));
+            string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -Content");
+            string NewStatus = AuxiliaryServerWorker.GetElement(MessageString, "-Content ", ".");
+            AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " updated their status to " + NewStatus);
+            foreach (Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                AntVaultServer.Send(Sess.IpPort, AuxiliaryServerWorker.MessageByte(MessageString));
+            }
         }
 
         private static void HandleMessage(string MessageString, DataReceivedFromClientEventArgs Client)

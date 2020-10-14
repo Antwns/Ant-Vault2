@@ -51,7 +51,10 @@ namespace AntVault2Client.Pages
 
         private void StatusTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-
+            if(e.Key == System.Windows.Input.Key.Enter)
+            {
+                MainClientWorker.UpdateStatus(StatusTextBox.Text);
+            }
         }
 
         private void ClientChatTextBoxInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)

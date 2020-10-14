@@ -1,16 +1,10 @@
-﻿using AntVault2Client.Pages;
-using AntVault2Client.WindowControllers;
-using AntVault2Client.Windows;
+﻿using AntVault2Client.WindowControllers;
 using SimpleTcp;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Reflection.Emit;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
 using System.Windows.Media;
 
 namespace AntVault2Client.ClientWorkers
@@ -97,6 +91,31 @@ namespace AntVault2Client.ClientWorkers
             {
                 HandleMessage(MessageString);
             }
+            if(MessageString.StartsWith("/UpdateStatus"))//UpdateStatus -U Username -Content Msg.
+            {
+                HandleStatus(MessageString);
+            }
+        }
+
+        private static void HandleStatus(string MessageString)
+        {
+            string Sender = AuxiliaryClientWorker.GetElement(MessageString, "-U ", " -Content");
+            string Message = AuxiliaryClientWorker.GetElement(MessageString, "-Content ", ".");
+            MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+            {
+                #region Status updater
+                System.Windows.Controls.Label StatusLabel = new System.Windows.Controls.Label();
+                StatusLabel.FontSize = 18;
+                StatusLabel.FontStyle = FontStyles.Oblique;
+                StatusLabel.FontStyle = FontStyles.Italic;
+                StatusLabel.Foreground = System.Windows.Media.Brushes.Black;
+                StatusLabel.Content = Sender + " has updated their status to " + Message;
+                #endregion
+                MainWindowController.ChatParagraph.Inlines.Add(StatusLabel);
+                MainWindowController.ChatParagraph.Inlines.Add(Environment.NewLine);
+                MainWindowController.ChatDocument.Blocks.Add(MainWindowController.ChatParagraph);
+                MainWindowController.MainPage.ClientChatTextBox.Document = MainWindowController.ChatDocument;
+            });
         }
 
         private static void HandleMessage(string MessageString)
@@ -127,6 +146,10 @@ namespace AntVault2Client.ClientWorkers
                 MainWindowController.ChatDocument.Blocks.Add(MainWindowController.ChatParagraph);
                 MainWindowController.MainPage.ClientChatTextBox.Document = MainWindowController.ChatDocument;
             });
+        }
+        internal static void UpdateStatus(string NewStatus)
+        {
+            LoginClientWorker.AntVaultClient.Send("/UpdateStatus -U " + LoginClientWorker.CurrentUser + " -Content " + NewStatus + ".");
         }
 
         internal static void SendMessage(string Message)
