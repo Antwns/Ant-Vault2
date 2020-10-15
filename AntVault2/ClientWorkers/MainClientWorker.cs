@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.TextFormatting;
 
 namespace AntVault2Client.ClientWorkers
 {
@@ -41,10 +42,6 @@ namespace AntVault2Client.ClientWorkers
                 {
                     Usernames = AuxiliaryClientWorker.GetStringsFromBytes(e.Data);
                 }
-                else
-                {
-                    //Do nothing
-                }
             }
             if(MessageString.StartsWith("/SendProfilePictures") || ReceivingProfilePictures == true && MessageString.StartsWith("/EndSendProfilePictures") == false)
             {
@@ -56,10 +53,6 @@ namespace AntVault2Client.ClientWorkers
                 {
                     ProfilePictures = AuxiliaryClientWorker.GetPicturesFromBytes(e.Data);
                     GetCurrentProfilePicture(LoginClientWorker.CurrentUser);
-                }
-                else
-                {
-                    //Do nothing
                 }
             }
             if(MessageString.StartsWith("/SendFriendsList") || ReceivingFriendsList == true && MessageString.StartsWith("/EndSendFriendsList") == false)
@@ -97,6 +90,26 @@ namespace AntVault2Client.ClientWorkers
             }
         }
 
+        internal static void ShowOptions()
+        {
+            MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+            {
+                MainWindowController.MainWindow.Height = 450;
+                MainWindowController.MainWindow.Width = 800;
+                MainWindowController.MainWindow.Content = MainWindowController.OptionsPage;
+            });
+        }
+
+        internal static void ShowMainMenu()
+        {
+            MainWindowController.MainWindow.Dispatcher.Invoke(() => 
+            {
+                MainWindowController.MainWindow.Height = 1024;
+                MainWindowController.MainWindow.Width = 1280;
+                MainWindowController.MainWindow.Content = MainWindowController.MainPage;
+            });
+        }
+
         private static void HandleStatus(string MessageString)
         {
             string Sender = AuxiliaryClientWorker.GetElement(MessageString, "-U ", " -Content");
@@ -109,6 +122,7 @@ namespace AntVault2Client.ClientWorkers
                 StatusLabel.FontStyle = FontStyles.Oblique;
                 StatusLabel.FontStyle = FontStyles.Italic;
                 StatusLabel.Foreground = System.Windows.Media.Brushes.Black;
+                StatusLabel.MouseLeftButtonDown += This;
                 StatusLabel.Content = Sender + " has updated their status to " + Message;
                 #endregion
                 MainWindowController.ChatParagraph.Inlines.Add(StatusLabel);
@@ -116,6 +130,11 @@ namespace AntVault2Client.ClientWorkers
                 MainWindowController.ChatDocument.Blocks.Add(MainWindowController.ChatParagraph);
                 MainWindowController.MainPage.ClientChatTextBox.Document = MainWindowController.ChatDocument;
             });
+        }
+
+        private static void This(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            MessageBox.Show("This");
         }
 
         private static void HandleMessage(string MessageString)
@@ -132,8 +151,9 @@ namespace AntVault2Client.ClientWorkers
                 ImageToShowFrame.StrokeThickness = 1.5;
                 ImageBrush ImageToShowBrush = new ImageBrush(AuxiliaryClientWorker.BitmapToBitmapImage(ProfilePictures[Usernames.IndexOf(Sender)]));
                 ImageToShowFrame.Fill = ImageToShowBrush;
-                MainWindowController.ChatParagraph.Inlines.Add(ImageToShowFrame);
+                ImageToShowFrame.MouseLeftButtonDown += This;
                 #endregion
+                MainWindowController.ChatParagraph.Inlines.Add(ImageToShowFrame);
 
                 #region Text to add after the profile picture
                 System.Windows.Controls.Label TextToShow = new System.Windows.Controls.Label();
@@ -147,6 +167,7 @@ namespace AntVault2Client.ClientWorkers
                 MainWindowController.MainPage.ClientChatTextBox.Document = MainWindowController.ChatDocument;
             });
         }
+
         internal static void UpdateStatus(string NewStatus)
         {
             LoginClientWorker.AntVaultClient.Send("/UpdateStatus -U " + LoginClientWorker.CurrentUser + " -Content " + NewStatus + ".");
@@ -191,6 +212,23 @@ namespace AntVault2Client.ClientWorkers
                 Animations.LoginAnimations.LoginAnimation(MainWindowController.LoginPage.ConnectButton, MainWindowController.LoginPage.LoginGroupBox, MainWindowController.LoginPage.ServerStatusLabel, MainWindowController.LoginPage.ServerStatusEllipse, MainWindowController.LoginPage.WelcomeLabel);
                 MainWindowController.MainPage.UserNameLabel.Content = CurrentUser;
             });
+        }
+
+        internal static void DoLogout()
+        {
+            MessageBox.Show("You will now be logged out", "Logout", MessageBoxButton.OK, MessageBoxImage.Information);
+            MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+            {
+                MainWindowController.MainWindow.Content = MainWindowController.LoginPage;
+                MainWindowController.LoginPage.UserNameTextBox.Text = null;
+                MainWindowController.LoginPage.PasswordTextBox.Text = null;
+                MainWindowController.MainWindow.Width = 800;
+                MainWindowController.MainWindow.Height = 450;
+                Animations.LoginAnimations.LogoutAnimation(MainWindowController.LoginPage.ConnectButton, MainWindowController.LoginPage.LoginGroupBox, MainWindowController.LoginPage.ServerStatusLabel, MainWindowController.LoginPage.ServerStatusEllipse, MainWindowController.LoginPage.WelcomeLabel);
+            });
+            FriendsList.Clear();
+            Usernames.Clear();
+            ProfilePictures.Clear();
         }
 
         internal static void RequestUsersList(string CurrentUser)

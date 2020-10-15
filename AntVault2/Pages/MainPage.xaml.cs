@@ -1,4 +1,7 @@
 ﻿using AntVault2Client.ClientWorkers;
+using AntVault2Client.WindowControllers;
+using AntVault2Client.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace AntVault2Client.Pages
@@ -64,6 +67,16 @@ namespace AntVault2Client.Pages
                 MainClientWorker.SendMessage(ClientChatTextBoxInput.Text);
                 ClientChatTextBoxInput.Text = null;
             }
+        }
+
+        private void LogOutButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            MainClientWorker.DoLogout();
+        }
+
+        private void OptionsButton_Click(object sender, RoutedEventArgs e)
+        {
+            MainClientWorker.ShowOptions();
         }
     }
 }

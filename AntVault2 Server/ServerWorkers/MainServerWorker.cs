@@ -3,6 +3,7 @@ using System.IO;
 using AntVault2Server.DataAndResources;
 using SimpleTcp;
 using System.Threading;
+using System.Windows.Automation;
 
 namespace AntVault2Server.ServerWorkers
 {
@@ -353,6 +354,11 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " updated their status to " + NewStatus);
             foreach (Session Sess in AuxiliaryServerWorker.Sessions)
             {
+                if(Sess.Username == Sender)
+                {
+                    Sess.Status = NewStatus;
+                    AuxiliaryServerWorker.WriteToConfig(Sender, NewStatus, false, false, true);
+                }
                 AntVaultServer.Send(Sess.IpPort, AuxiliaryServerWorker.MessageByte(MessageString));
             }
         }

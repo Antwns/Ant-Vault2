@@ -308,5 +308,39 @@ namespace AntVault2Server.ServerWorkers
                 }
             }
         }
+
+        internal static void WriteToConfig(string UsernameToWorkOn, string NewEntry, bool Username, bool Password, bool Status)
+        {
+            if (Username == true)
+            {
+                string OldFile = File.ReadAllText(UserDatabaseDir);
+                string OldLine = "/u " + UsernameToWorkOn + " /p " + Passwords[Usernames.IndexOf(UsernameToWorkOn)] + " /s " + Statuses[Usernames.IndexOf(UsernameToWorkOn)] + ".";
+                string NewLine = "/u " + NewEntry + " /p " + Passwords[Usernames.IndexOf(UsernameToWorkOn)] + " /s " + Statuses[Usernames.IndexOf(UsernameToWorkOn)] + ".";
+                Usernames[Usernames.IndexOf(UsernameToWorkOn)] = NewEntry;
+                string NewFile = OldFile.Replace(OldLine, NewLine);
+                File.WriteAllText(UserDatabaseDir, NewFile);
+                WriteToConsole("[INFO] Successfully updated username for " + UsernameToWorkOn + ", new username is " + NewEntry);
+            }
+            if(Password == true)
+            {
+                string OldFile = File.ReadAllText(UserDatabaseDir);
+                string OldLine = "/u " + UsernameToWorkOn + " /p " + Passwords[Usernames.IndexOf(UsernameToWorkOn)] + " /s " + Statuses[Usernames.IndexOf(UsernameToWorkOn)] + ".";
+                string NewLine = "/u " + Usernames[Usernames.IndexOf(UsernameToWorkOn)] + " /p " + NewEntry + " /s " + Statuses[Usernames.IndexOf(UsernameToWorkOn)] + ".";
+                Passwords[Usernames.IndexOf(UsernameToWorkOn)] = NewEntry;
+                string NewFile = OldFile.Replace(OldLine, NewLine);
+                File.WriteAllText(UserDatabaseDir, NewFile);
+                WriteToConsole("[INFO] Successfully updated password for " + UsernameToWorkOn);
+            }
+            if(Status == true)
+            {
+                string OldFile = File.ReadAllText(UserDatabaseDir);
+                string OldLine = "/u " + UsernameToWorkOn + " /p " + Passwords[Usernames.IndexOf(UsernameToWorkOn)] + " /s " + Statuses[Usernames.IndexOf(UsernameToWorkOn)] + ".";
+                string NewLine = "/u " + Usernames[Usernames.IndexOf(UsernameToWorkOn)] + " /p " + Passwords[Usernames.IndexOf(UsernameToWorkOn)] + " /s " + NewEntry + ".";
+                Statuses[Usernames.IndexOf(UsernameToWorkOn)] = NewEntry;
+                string NewFile = OldFile.Replace(OldLine, NewLine);
+                File.WriteAllText(UserDatabaseDir, NewFile);
+                WriteToConsole("[INFO] Successfully updated status for " + UsernameToWorkOn + ", new status is " + NewEntry);
+            }
+        }
     }
 }
