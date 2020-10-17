@@ -4,6 +4,8 @@ using AntVault2Server.DataAndResources;
 using SimpleTcp;
 using System.Threading;
 using System.Windows.Automation;
+using System.Drawing;
+using System.Windows;
 
 namespace AntVault2Server.ServerWorkers
 {
@@ -12,6 +14,7 @@ namespace AntVault2Server.ServerWorkers
         public static string DefaultConfig = Properties.Resources.DefaultConfig;
         public static bool SetUpEvents;
         public static string UserDirectories;
+        public static bool UpdatingProfilePicture;
 
         public static SimpleTcpServer AntVaultServer = new SimpleTcpServer("*", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)), false, null, null);
         public static SimpleTcpServer AntVaultStatusServer = new SimpleTcpServer("*", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)) + 1, false, null, null);
@@ -236,9 +239,9 @@ namespace AntVault2Server.ServerWorkers
             {
                 UpdateStatus(MessageString, e);
             }
-            if(MessageString.StartsWith("/UpdateProfilePicture"))//UdateProfilePicture -U Username -Content byte[].
+            if(MessageString.StartsWith("/UpdateProfilePicture"))//UdateProfilePicture
             {
-                UpdateProfilePicture(MessageString, e);
+                UpdateProfilePictureModeStart(e);
             }
             if(MessageString.StartsWith("/SendFriendRequest"))//SendFriendRequest -U Username -Content UserToAdd.
             {
@@ -260,21 +263,67 @@ namespace AntVault2Server.ServerWorkers
             {
                 SendUsers(MessageString, e);
             }
+            if(UpdatingProfilePicture == true && MessageString.StartsWith("/UpdateProfilePicture") == false)//UpdateProfilePicture
+            {
+                UpdateProfilePicture(e);
+                ProfilePictureUpdatePulse(e);
+            }
         }
 
         #endregion
 
         #region Server handlers
+        private static void ProfilePictureUpdatePulse(DataReceivedFromClientEventArgs Data)
+        {
+            string UsernameToUpdate = null;
+            foreach(Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                if (Sess.IpPort == Data.IpPort)
+                {
+                    UsernameToUpdate = Sess.Username;
+                }
+            }
+            foreach(Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                AntVaultServer.Send(Sess.IpPort, "/UserUpdatedPicture -U " + UsernameToUpdate + ".");
+                Thread.Sleep(200);
+                AntVaultServer.Send(Sess.IpPort, AuxiliaryServerWorker.GetBytesFromBitmap(AuxiliaryServerWorker.ProfilePictures[AuxiliaryServerWorker.Usernames.IndexOf(UsernameToUpdate)]));
+            }
+        }
 
-        private static void SendUsers(string MessageString, DataReceivedFromClientEventArgs Client)//SendUsers, byte[] UsersList, //EndSendUsers
+        private static void UpdateProfilePicture(DataReceivedFromClientEventArgs Client)
+        {
+            string Sender = null;
+            foreach(Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                if (Sess.IpPort == Client.IpPort)
+                {
+                    Sender = Sess.Username;
+                    Sess.ProfilePicture = AuxiliaryServerWorker.GetBitmapFromBytes(Client.Data);
+                    AuxiliaryServerWorker.ProfilePictures[AuxiliaryServerWorker.Usernames.IndexOf(Sender)] = Sess.ProfilePicture;
+                    try
+                    {
+                        AuxiliaryServerWorker.WriteToConsole("[INFO] Previous entry found for " + Sess.Username + " updating it now...");
+                        File.Delete(UserDirectories + Sess.Username + "\\ProfilePicture_" + Sess.Username + ".png");
+                        File.WriteAllBytes(UserDirectories + Sess.Username + "\\ProfilePicture_" + Sess.Username + ".png", Client.Data);
+                    }
+                    catch (Exception exc)
+                    {
+                        AuxiliaryServerWorker.WriteToConsole("[ERROR] Could not update profile picture for user " + Sess.Username + " due to " + exc);
+                    }
+                    AuxiliaryServerWorker.WriteToConsole("[INFO] Profile picture update request finsihed successfully for " + Sender);
+                }
+            }
+            UpdatingProfilePicture = false;
+        }
+
+        private static void SendUsers(string MessageString, DataReceivedFromClientEventArgs Client)//SendUsers, byte[] UsersList
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] Sending users list to " + Sender);
             AntVaultServer.Send(Client.IpPort, "/SendUsernames");
             Thread.Sleep(100);
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.ReturnByteArrayFromStringCollection(AuxiliaryServerWorker.Usernames));
-            Thread.Sleep(100);
-            AntVaultServer.Send(Client.IpPort, "/EndSendUsernames");
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successfully sent users list to " + Sender);
         }
         private static void SendStatus(string MessageString, DataReceivedFromClientEventArgs Client)
@@ -290,10 +339,8 @@ namespace AntVault2Server.ServerWorkers
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " requested to update their profile picture cache");
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/SendProfilePictures")); //SendProfilePictures
-            Thread.Sleep(100);
+            Thread.Sleep(1000);
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.ProfilePictureBytes(AuxiliaryServerWorker.ProfilePictures));
-            Thread.Sleep(100);
-            AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/EndSendProfilePictures"));
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successfully sent profile picture cache to user " + Sender);
         }
 
@@ -304,8 +351,6 @@ namespace AntVault2Server.ServerWorkers
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/SendFriendsList"));
             Thread.Sleep(100);
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.FriendsListBytes(AuxiliaryServerWorker.GetFriendsList(Sender)));
-            Thread.Sleep(100);
-            AntVaultServer.Send(Client.IpPort,"/EndSendFriendsList");
             AuxiliaryServerWorker.WriteToConsole("[INFO Successfully updated friends list for user " + Sender);
         }
 
@@ -339,12 +384,18 @@ namespace AntVault2Server.ServerWorkers
             
         }
 
-        private static void UpdateProfilePicture(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void UpdateProfilePictureModeStart(DataReceivedFromClientEventArgs Client)
         {
-            string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -Content");
+            UpdatingProfilePicture = true;
+            string Sender = null;
+            foreach(Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                if(Sess.IpPort == Client.IpPort)
+                {
+                    Sender = Sess.Username;
+                }
+            }
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " sent a profile picture update request");
-            AntVaultServer.Send("*", AuxiliaryServerWorker.MessageByte(MessageString));
-            AuxiliaryServerWorker.WriteToConsole("[INFO] Profile picture update request finsihed successfully for " + Sender);
         }
 
         private static void UpdateStatus(string MessageString, DataReceivedFromClientEventArgs Client)//UpdateStatus -U Username -Content Msg.

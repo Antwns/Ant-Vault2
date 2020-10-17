@@ -6,6 +6,8 @@ using System.IO;
 using System.Drawing.Imaging;
 using System.Windows.Media.Imaging;
 using System;
+using Microsoft.Win32;
+using System.Windows;
 
 namespace AntVault2Client.ClientWorkers
 {
@@ -50,6 +52,49 @@ namespace AntVault2Client.ClientWorkers
             }
         }
 
+        internal static byte[] GetNewProfilePicture()
+        {
+            byte[] NewProfilePictureBytes = null;
+            OpenFileDialog NewProfilePictureSelector = new OpenFileDialog()
+            {
+                Filter = "png files (*.png)|*.png",
+            };
+            NewProfilePictureSelector.ShowDialog();
+            try
+            {
+                NewProfilePictureBytes = File.ReadAllBytes(NewProfilePictureSelector.FileName);
+            }
+            catch
+            {
+                MessageBox.Show("You did not select an item! Process will be canceled!", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                Pages.OptionsPage.ChangedProfilePicture = false;
+            }
+            MemoryStream ImageCheckerMemoryStream = new MemoryStream(NewProfilePictureBytes);
+            try
+            {
+                Image ImageChecker = Image.FromStream(ImageCheckerMemoryStream);
+                if(ImageChecker.Height < 400 && ImageChecker.Width < 400)
+                {
+                    Pages.OptionsPage.ChangedProfilePicture = true;
+                    MessageBox.Show("Selected item was of correct format!", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return NewProfilePictureBytes;
+                }
+                else
+                {
+                    Pages.OptionsPage.ChangedProfilePicture = false;
+                    MessageBox.Show("Selected item was not of correct format, max allowed sizes are 400x400", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return null;
+                }
+
+            }
+            catch
+            {
+                MessageBox.Show("Selected item was not of image type, please try again", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                Pages.OptionsPage.ChangedProfilePicture = false;
+                return null;
+            }
+        }
+
         internal static Collection<string> GetStringsFromBytes(byte[] ArrayToConvert)
         {
             BinaryFormatter StringFormatter = new BinaryFormatter();
@@ -60,6 +105,13 @@ namespace AntVault2Client.ClientWorkers
                 Collection<string> StringsToReturn = (Collection<string>)StringFormatter.Deserialize(StringStream);
                 return StringsToReturn;
             }
+        }
+
+        internal static Bitmap GetBitmapFromBytes(byte[] Data)
+        {
+            MemoryStream BitmapConverterStream = new MemoryStream(Data);
+            Bitmap BitmapToReturn = new Bitmap(BitmapConverterStream);
+            return BitmapToReturn;
         }
 
         internal static BitmapImage BitmapToBitmapImage(Bitmap InputBitmap)

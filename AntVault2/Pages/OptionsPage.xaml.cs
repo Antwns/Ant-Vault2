@@ -1,19 +1,8 @@
 ﻿using AntVault2Client.ClientWorkers;
-using AntVault2Client.Windows;
+using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace AntVault2Client.Pages
 {
@@ -27,9 +16,45 @@ namespace AntVault2Client.Pages
             InitializeComponent();
         }
 
+        internal static byte[] NewProfilePictureBytes;
+        internal static bool ChangedProfilePicture = false;
+
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             MainClientWorker.ShowMainMenu();
+        }
+
+        private void PlaySoundsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (PlaySoundsCheckBox.IsChecked == true)
+            {
+                PlaySoundsCheckBox.IsChecked = false;
+            }
+            else
+            {
+                PlaySoundsCheckBox.IsChecked = true;
+            }
+        }
+
+        private void ApplyBUtton_Click(object sender, RoutedEventArgs e)
+        {
+            if(UsernameTextBox.Text != LoginClientWorker.CurrentUser)
+            {
+                MainClientWorker.UpdateUsername(LoginClientWorker.CurrentUser, UsernameTextBox.Text);
+            }
+            if(NewPasswordTextBox.Text != "")
+            {
+                MainClientWorker.UpdatePassword(OldPasswordTextBox.Text, NewPasswordTextBox.Text);
+            }
+            if(ChangedProfilePicture == true)
+            {
+                MainClientWorker.UpdateProfilePicture(NewProfilePictureBytes);
+            }
+        }
+
+        private void BrowseForNewProfilePictureBtton_Click(object sender, RoutedEventArgs e)
+        {
+            NewProfilePictureBytes = AuxiliaryClientWorker.GetNewProfilePicture();//Returns resized 500x500 PNG picture and validates it
         }
     }
 }

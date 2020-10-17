@@ -50,6 +50,7 @@ namespace AntVault2Client.ClientWorkers
             if(CanConnect == true)
             {
                 AntVaultClient.Connect();
+                AntVaultClient.Keepalive.EnableTcpKeepAlives = true;
                 AntVaultClient.Send("/NewConnection -U " + Username + " -P " + Password + ".");//NewConnection -U Username -P Password.
             }
             else

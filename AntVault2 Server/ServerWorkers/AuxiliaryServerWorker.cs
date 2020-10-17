@@ -2,9 +2,11 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Windows.Controls;
 
 namespace AntVault2Server.ServerWorkers
 {
@@ -68,14 +70,21 @@ namespace AntVault2Server.ServerWorkers
                     Statuses.Add(GetElement(CurrentLine, "/s ", "."));
                     try
                     {
-                        Bitmap ProfPicToAdd = new Bitmap(MainServerWorker.UserDirectories + Usernames[LineNumber] + "\\ProfilePicture_" + Usernames[LineNumber] + ".png");
-                        ProfilePictures.Add(ProfPicToAdd);
+                        ProfilePictures.Add(GetBitmapFromBytes(File.ReadAllBytes(MainServerWorker.UserDirectories + Usernames[LineNumber] + "\\ProfilePicture_" + Usernames[LineNumber] + ".png")));
                     }
                     catch
                     {
                         Bitmap ProfPicToAdd = new Bitmap(Properties.Resources.DefaultProfilePicture);
-                        ProfilePictures.Add(ProfPicToAdd);
                         WriteToConsole("[ERROR] Could not find profile picture for " + Usernames[LineNumber] + " using the default picture instead");
+                        try
+                        {
+                            ProfPicToAdd.Save(MainServerWorker.UserDirectories + Usernames[LineNumber] + "\\ProfilePicture_" + Usernames[LineNumber] + ".png");
+                        }
+                        catch(Exception exc)
+                        {
+                            WriteToConsole("[ERROR] Could not find profile picture for " + Usernames[LineNumber] + " due to " + exc);
+                        }
+                        ProfilePictures.Add(ProfPicToAdd);
                         //use default pic
                     }
                     if (Usernames[LineNumber] != null && Passwords[LineNumber] != null && Statuses[LineNumber] != null)
@@ -99,8 +108,8 @@ namespace AntVault2Server.ServerWorkers
                             try
                             {
                                 Bitmap DeaultProfilePicture = new Bitmap(Properties.Resources.DefaultProfilePicture);
-                                Image DefaultProfilePictureImage = DeaultProfilePicture;
-                                DefaultProfilePictureImage.Save(MainServerWorker.UserDirectories + Usernames[LineNumber] + "\\ProfilePicture_" + Usernames[LineNumber] + ".png");
+                                System.Drawing.Image DefaultProfilePictureImage = DeaultProfilePicture;
+                                DefaultProfilePictureImage.Save(MainServerWorker.UserDirectories + Usernames[LineNumber] + "\\ProfilePicture_" + Usernames[LineNumber] + ".png",ImageFormat.Png);
                                 WriteToConsole("[INFO] Successfully created user profile picture for " + Usernames[LineNumber]);
                                 DeaultProfilePicture.Dispose();
                             }
@@ -121,6 +130,7 @@ namespace AntVault2Server.ServerWorkers
                 }
                 else
                 {
+                    WriteToConsole("[INFO] Incorrect initialization in the database format");
                     ErrorsFound = true;
                     break;
                 }
@@ -224,7 +234,7 @@ namespace AntVault2Server.ServerWorkers
 
         internal static Bitmap GetProfilePicture(string Username)
         {
-            Bitmap ProfilePictureForUser = new Bitmap(MainServerWorker.UserDirectories + Username + "\\ProfilePicture_" + Username + ".png");
+            Bitmap ProfilePictureForUser = GetBitmapFromBytes(File.ReadAllBytes(MainServerWorker.UserDirectories + Username + "\\ProfilePicture_" + Username + ".png"));
             return ProfilePictureForUser;
         }
 
@@ -279,6 +289,23 @@ namespace AntVault2Server.ServerWorkers
                 CollectionStream.Dispose();
                 return CollectionArray;
             }
+        }
+
+        internal static byte[] GetBytesFromBitmap(Bitmap BitmapToRead)
+        {
+            byte[] BytesToreturn = null;
+            MemoryStream BitmapConverterStream = new MemoryStream();
+            BitmapToRead.Save(BitmapConverterStream, ImageFormat.Png);
+            BytesToreturn = BitmapConverterStream.ToArray();
+            return BytesToreturn;
+        }
+
+        internal static Bitmap GetBitmapFromBytes(byte[] Data)
+        {
+            MemoryStream ImageStreamConverter = new MemoryStream(Data);
+            System.Drawing.Image ImageToSave = System.Drawing.Image.FromStream(ImageStreamConverter);
+            Bitmap BitmapToReturn = new Bitmap(ImageToSave);
+            return BitmapToReturn;
         }
 
         internal static byte[] ReturnByteArrayFromStringCollection(Collection<string> CollectionToConvert)

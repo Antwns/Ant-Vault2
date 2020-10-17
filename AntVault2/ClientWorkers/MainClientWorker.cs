@@ -2,11 +2,13 @@
 using SimpleTcp;
 using System;
 using System.Collections.ObjectModel;
+using System.Data.SqlTypes;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.TextFormatting;
 
 namespace AntVault2Client.ClientWorkers
 {
@@ -15,9 +17,14 @@ namespace AntVault2Client.ClientWorkers
         public static Collection<string> Usernames = new Collection<string>();
         public static Collection<Bitmap> ProfilePictures = new Collection<Bitmap>();
         public static Collection<string> FriendsList = new Collection<string>();
+
+        static string UpdateSender = null;
+
         static bool ReceivingProfilePictures = false;
         static bool ReceivingUsernames = false;
+        static bool ReceivingProfilePictureUpdatePulse = false;
         static bool ReceivingFriendsList = false;
+        static bool SenderDefined = false;
         internal static void AntVaultClient_DataReceived(object sender, DataReceivedFromServerEventArgs e)
         {
             string MessageString = AuxiliaryClientWorker.MessageString(e.Data);
@@ -25,60 +32,62 @@ namespace AntVault2Client.ClientWorkers
             {
                 DoLogin(LoginClientWorker.CurrentUser);
                 RequestUsersList(LoginClientWorker.CurrentUser);
-                RequestProfilePictures(LoginClientWorker.CurrentUser);
             }
             if (MessageString.StartsWith("/SendStatus"))
             {
                 SetStatus(MessageString);
+                Thread.Sleep(200);
                 RequestFriendsList(LoginClientWorker.CurrentUser);
             }
-            if(MessageString.StartsWith("/SendUsernames") || ReceivingUsernames == true && MessageString.StartsWith("/EndSendUsernames") == false)
+            if(MessageString.StartsWith("/SendUsernames") || ReceivingUsernames == true)
             {
                 if (MessageString.StartsWith("/SendUsernames") == true && ReceivingUsernames == false)
                 {
+                    ReceivingProfilePictureUpdatePulse = false;
+                    ReceivingFriendsList = false;
+                    ReceivingProfilePictures = false;
                     ReceivingUsernames = true;
                 }
                 else if (MessageString.StartsWith("/SendUsernames") == false && ReceivingUsernames == true)
                 {
+                    ReceivingUsernames = false;
                     Usernames = AuxiliaryClientWorker.GetStringsFromBytes(e.Data);
+                    RequestProfilePictures(LoginClientWorker.CurrentUser);
                 }
             }
-            if(MessageString.StartsWith("/SendProfilePictures") || ReceivingProfilePictures == true && MessageString.StartsWith("/EndSendProfilePictures") == false)
+            if(MessageString.StartsWith("/SendProfilePictures") || ReceivingProfilePictures == true)
             {
                 if (MessageString.StartsWith("/SendProfilePictures") == true && ReceivingProfilePictures == false)
                 {
+                    ReceivingProfilePictureUpdatePulse = false;
+                    ReceivingFriendsList = false;
+                    ReceivingUsernames = false;
                     ReceivingProfilePictures = true;
                 }
                 else if (MessageString.StartsWith("/SendProfilePicures") == false && ReceivingProfilePictures == true)
                 {
-                    ProfilePictures = AuxiliaryClientWorker.GetPicturesFromBytes(e.Data);
+                    ReceivingProfilePictures = false;
+                    File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "This.txt", MessageString);
+                    ProfilePictures = AuxiliaryClientWorker.GetPicturesFromBytes(e.Data);//
                     GetCurrentProfilePicture(LoginClientWorker.CurrentUser);
+                    RequestStatus(LoginClientWorker.CurrentUser);
                 }
             }
-            if(MessageString.StartsWith("/SendFriendsList") || ReceivingFriendsList == true && MessageString.StartsWith("/EndSendFriendsList") == false)
+            if(MessageString.StartsWith("/SendFriendsList") || ReceivingFriendsList == true)
             {
                 if(MessageString.StartsWith("/SendFriendsList") == true && ReceivingFriendsList == false)
                 {
+                    ReceivingProfilePictureUpdatePulse = false;
+                    ReceivingProfilePictures = false;
+                    ReceivingUsernames = false;
                     ReceivingFriendsList = true;
                 }
                 else if(MessageString.StartsWith("/SendFriendsList") == false && ReceivingFriendsList == true)
                 {
+                    ReceivingFriendsList = false;
                     FriendsList = AuxiliaryClientWorker.GetStringsFromBytes(e.Data);
                     GetFriendsList();
                 }
-            }
-            if(MessageString.StartsWith("/EndSendProfilePictures"))
-            {
-                ReceivingProfilePictures = false;
-                RequestStatus(LoginClientWorker.CurrentUser);
-            }
-            if(MessageString.StartsWith("/EndSendUsernames"))
-            {
-                ReceivingUsernames = false;
-            }
-            if(MessageString.StartsWith("/EndSendFriendsList"))
-            {
-                ReceivingFriendsList = false;
             }
             if(MessageString.StartsWith("/Message"))
             {
@@ -88,6 +97,57 @@ namespace AntVault2Client.ClientWorkers
             {
                 HandleStatus(MessageString);
             }
+            if(MessageString.StartsWith("/UserUpdatedPicture") || ReceivingProfilePictureUpdatePulse == true)//UserUpdatedPicture -U  + UsernameToUpdate.
+            {
+                if (SenderDefined == false)
+                {
+                    UpdateSender = AuxiliaryClientWorker.GetElement(MessageString, "-U ", ".");
+                    SenderDefined = true;
+                }
+                if (MessageString.StartsWith("/UserUpdatedPicture") == true && ReceivingProfilePictureUpdatePulse == false)
+                {
+                    ReceivingFriendsList = false;
+                    ReceivingProfilePictures = false;
+                    ReceivingUsernames = false;
+                    ReceivingProfilePictureUpdatePulse = true;
+                }
+                else if (MessageString.StartsWith("/UserUpdatedPicture") == false && ReceivingProfilePictureUpdatePulse == true)
+                {
+                    UpdateUserProfilePicture(UpdateSender, e.Data);
+                    ReceivingProfilePictureUpdatePulse = false;
+                    SenderDefined = false;
+                }
+            }
+        }
+
+        internal static void UpdateUserProfilePicture(string UserToUpdate, byte[] Data)
+        {
+            byte[] DataToUse = Data;
+            ProfilePictures[Usernames.IndexOf(UserToUpdate)] = AuxiliaryClientWorker.GetBitmapFromBytes(Data);
+            if(UserToUpdate == LoginClientWorker.CurrentUser)
+            {
+                MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+                {
+                    ImageBrush NewProfilePictureBrush = new ImageBrush(AuxiliaryClientWorker.BitmapToBitmapImage(AuxiliaryClientWorker.GetBitmapFromBytes(DataToUse)));
+                    MainWindowController.MainPage.UserProfilePicture.Fill = NewProfilePictureBrush;
+                });
+            }
+        }
+        internal static void UpdateProfilePicture(byte[] NewProfilePictureBytes)//UpdateProfilePicture //byte[] //EndUpdateProfilePicture
+        {
+            LoginClientWorker.AntVaultClient.Send("/UpdateProfilePicture");
+            Thread.Sleep(200);
+            LoginClientWorker.AntVaultClient.Send(NewProfilePictureBytes);
+        }
+
+        internal static void UpdatePassword(string OldPassword, string NewPassword)//UpdatePassword -P OldPassword -Content NewPassword.
+        {
+            LoginClientWorker.AntVaultClient.Send("/UpdatePassword -P " + OldPassword + " -Content " + NewPassword + ".");
+        }
+
+        internal static void UpdateUsername(string CurrentUsername, string NewUsername)//UpdateUsername -U OldUsername -Content NewUsername.
+        {
+            LoginClientWorker.AntVaultClient.Send("/UpdateUsername -U " + CurrentUsername + " -Content " + NewUsername + ".");
         }
 
         internal static void ShowOptions()
@@ -97,6 +157,9 @@ namespace AntVault2Client.ClientWorkers
                 MainWindowController.MainWindow.Height = 450;
                 MainWindowController.MainWindow.Width = 800;
                 MainWindowController.MainWindow.Content = MainWindowController.OptionsPage;
+                MainWindowController.OptionsPage.UsernameTextBox.Text = LoginClientWorker.CurrentUser;
+                MainWindowController.OptionsPage.OldPasswordTextBox.Text = null;
+                MainWindowController.OptionsPage.NewPasswordTextBox.Text = null;
             });
         }
 
@@ -107,6 +170,7 @@ namespace AntVault2Client.ClientWorkers
                 MainWindowController.MainWindow.Height = 1024;
                 MainWindowController.MainWindow.Width = 1280;
                 MainWindowController.MainWindow.Content = MainWindowController.MainPage;
+                MainWindowController.MainPage.UserNameLabel.Content = LoginClientWorker.CurrentUser;
             });
         }
 

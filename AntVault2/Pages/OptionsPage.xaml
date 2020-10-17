@@ -55,8 +55,8 @@
                 <Label Content="Old password" Grid.Column="3" Grid.Row="1" Foreground="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
                 <Label Content="New password" Grid.Column="3" Grid.Row="4" Foreground="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
                 <Label Content="Change profile picture" Grid.Column="1" Grid.Row="4" Foreground="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
-                <Button x:Name="BrowseForNewProfilePictureBtton" Content="Browse" Grid.Column="1" Margin="0" Grid.Row="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="190" BorderBrush="White" Foreground="White" Background="#FF8248C9"/>
-                <Button x:Name="ApplyBUtton" Content="Apply" Grid.Column="2" Margin="0" Grid.Row="6" Background="#FF8248C9" BorderBrush="White" Foreground="White" VerticalContentAlignment="Top" FontSize="10" Padding="0"/>
+                <Button x:Name="BrowseForNewProfilePictureBtton" Content="Browse" Grid.Column="1" Margin="0" Grid.Row="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="190" BorderBrush="White" Foreground="White" Background="#FF8248C9" Click="BrowseForNewProfilePictureBtton_Click"/>
+                <Button x:Name="ApplyBUtton" Content="Apply" Grid.Column="2" Margin="0" Grid.Row="6" Background="#FF8248C9" BorderBrush="White" Foreground="White" VerticalContentAlignment="Top" FontSize="10" Padding="0" Click="ApplyBUtton_Click"/>
             </Grid>
         </GroupBox>
         <GroupBox x:Name="ClientSettingsGroupBox" Grid.Column="1" Header="Client settings" Margin="0" Grid.Row="6" Grid.RowSpan="3" Grid.ColumnSpan="4" BorderThickness="2" Foreground="White">
@@ -75,7 +75,7 @@
                     <ColumnDefinition Width="100*"/>
                     <ColumnDefinition Width="10*"/>
                 </Grid.ColumnDefinitions>
-                <Rectangle Grid.Column="1" Fill="#FF8248C9" Margin="0" Grid.Row="1" Stroke="White"/>
+                <Button x:Name="PlaySoundsButton" Content ="" Grid.Column="1" Margin="0" Grid.Row="1" Background="#FF8248C9" Foreground="White" BorderBrush="White" Click="PlaySoundsButton_Click"/>
                 <CheckBox x:Name="PlaySoundsCheckBox" Content="Play sounds" Grid.Column="1" Margin="0" Grid.Row="1" BorderBrush="White" Background="#FF8248C9" Foreground="White" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True"/>
                 <Button Content="Change theme" Grid.Column="1" Margin="0" Grid.Row="3" Background="#FF8248C9" Foreground="White" BorderBrush="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ToolTip="Not implemented yet"/>
                 <Button Content="Theme creator" Grid.Column="3" Margin="0" Grid.Row="3" Background="#FF8248C9" BorderBrush="White" Foreground="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ToolTip="Not implemented yet"/>
