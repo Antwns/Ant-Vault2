@@ -7,6 +7,7 @@ namespace AntVault2Client.ClientWorkers
 {
     class LoginClientWorker
     {
+        public static bool SetUpConnection = false;
         public static string CurrentUser;
         public static bool CanConnect = false;
         public static SimpleTcpClient AntVaultClient = new SimpleTcpClient("AntMax.ddns.net", 8910, false, null, null);
@@ -49,8 +50,15 @@ namespace AntVault2Client.ClientWorkers
             CurrentUser = Username;
             if(CanConnect == true)
             {
-                AntVaultClient.Connect();
-                AntVaultClient.Keepalive.EnableTcpKeepAlives = true;
+                if (SetUpConnection == false)
+                {
+                    AntVaultClient.Connect();
+                    AntVaultClient.Keepalive.EnableTcpKeepAlives = true;
+                    AntVaultClient.Keepalive.TcpKeepAliveInterval = 5;
+                    AntVaultClient.Keepalive.TcpKeepAliveTime = 5;
+                    AntVaultClient.Keepalive.TcpKeepAliveRetryCount = 5;
+                    SetUpConnection = true;
+                }
                 AntVaultClient.Send("/NewConnection -U " + Username + " -P " + Password + ".");//NewConnection -U Username -P Password.
             }
             else

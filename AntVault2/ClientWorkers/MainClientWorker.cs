@@ -6,6 +6,7 @@ using System.Data.SqlTypes;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -30,8 +31,10 @@ namespace AntVault2Client.ClientWorkers
             string MessageString = AuxiliaryClientWorker.MessageString(e.Data);
             if (MessageString.StartsWith("/AcceptConnection"))
             {
-                DoLogin(LoginClientWorker.CurrentUser);
-                RequestUsersList(LoginClientWorker.CurrentUser);
+                Thread LoginThread = new Thread(() => DoLogin(LoginClientWorker.CurrentUser));
+                LoginThread.Start();
+                Thread UsersListThread = new Thread(() => RequestUsersList(LoginClientWorker.CurrentUser));
+                UsersListThread.Start();
             }
             if (MessageString.StartsWith("/SendStatus"))
             {
@@ -91,7 +94,8 @@ namespace AntVault2Client.ClientWorkers
             }
             if(MessageString.StartsWith("/Message"))
             {
-                HandleMessage(MessageString);
+                Thread MessageThread = new Thread(() => HandleMessage(MessageString));
+                MessageThread.Start();
             }
             if(MessageString.StartsWith("/UpdateStatus"))//UpdateStatus -U Username -Content Msg.
             {
@@ -118,6 +122,33 @@ namespace AntVault2Client.ClientWorkers
                     SenderDefined = false;
                 }
             }
+            if(MessageString.StartsWith("/UserConnected"))
+            {
+                HandleNewUser(MessageString, e);
+            }
+        }
+
+        private static void HandleNewUser(string MessageString, DataReceivedFromServerEventArgs e)
+        {
+            string Sender = AuxiliaryClientWorker.GetElement(MessageString, "-U ", ".");
+            RequestUsersList(LoginClientWorker.CurrentUser);
+            MainWindowController.MainWindow.Dispatcher.Invoke(() =>
+            {
+                #region New user joined pulse
+                System.Windows.Controls.Label StatusLabel = new System.Windows.Controls.Label();
+                StatusLabel.FontSize = 18;
+                StatusLabel.FontStyle = FontStyles.Oblique;
+                StatusLabel.FontStyle = FontStyles.Italic;
+                StatusLabel.Foreground = System.Windows.Media.Brushes.Black;
+                StatusLabel.MouseLeftButtonDown += This;
+                StatusLabel.Content = Sender + " has joined the vault!";
+                #endregion
+                MainWindowController.ChatParagraph.Inlines.Add(StatusLabel);
+                MainWindowController.ChatParagraph.Inlines.Add(Environment.NewLine);
+                MainWindowController.ChatDocument.Blocks.Add(MainWindowController.ChatParagraph);
+                MainWindowController.MainPage.ClientChatTextBox.Document = MainWindowController.ChatDocument;
+            });
+
         }
 
         internal static void UpdateUserProfilePicture(string UserToUpdate, byte[] Data)
@@ -136,7 +167,7 @@ namespace AntVault2Client.ClientWorkers
         internal static void UpdateProfilePicture(byte[] NewProfilePictureBytes)//UpdateProfilePicture //byte[] //EndUpdateProfilePicture
         {
             LoginClientWorker.AntVaultClient.Send("/UpdateProfilePicture");
-            Thread.Sleep(200);
+            Thread.Sleep(500);
             LoginClientWorker.AntVaultClient.Send(NewProfilePictureBytes);
         }
 

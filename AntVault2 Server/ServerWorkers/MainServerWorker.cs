@@ -44,6 +44,11 @@ namespace AntVault2Server.ServerWorkers
             CheckUserDatabase(AuxiliaryServerWorker.UserDatabaseDir);
             CheckFileFolders();
             AntVaultServer.Start();
+            AntVaultServer.Keepalive.EnableTcpKeepAlives = true;
+            AntVaultServer.Keepalive.TcpKeepAliveInterval = 5;
+            AntVaultServer.Keepalive.TcpKeepAliveTime = 5;
+            AntVaultServer.Keepalive.TcpKeepAliveRetryCount = 5;
+            AntVaultServer.Settings.IdleClientEvaluationIntervalSeconds = 200;
             AuxiliaryServerWorker.WriteToConsole("[INFO] Server started on port " + AuxiliaryServerWorker.ReadFromConfig(true,false));
         }
 
@@ -191,7 +196,22 @@ namespace AntVault2Server.ServerWorkers
         #region Server events
         private static void Events_ClientDisconnected(object sender, ClientDisconnectedEventArgs e)
         {
+            string Sender = null;
+            foreach (Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                if(Sess.IpPort == e.IpPort)
+                {
+                    Sender = Sess.Username;
+                }
+            }
             AuxiliaryServerWorker.WriteToConsole("[INFO] Client " + e.IpPort + " disconnected due to " + e.Reason);
+            foreach (Session Sess in AuxiliaryServerWorker.Sessions)
+            {
+                if (Sess.IpPort != e.IpPort)
+                {
+                    AntVaultServer.Send(Sess.IpPort, "/UserDisonnected -U " + Sender + ".");
+                }
+            }
             foreach(Session Sess in AuxiliaryServerWorker.Sessions)
             {
                 if (Sess.IpPort == e.IpPort)
@@ -221,27 +241,40 @@ namespace AntVault2Server.ServerWorkers
 
         private static void Events_DataReceived(object sender, DataReceivedFromClientEventArgs e)
         {
-            string MessageString = AuxiliaryServerWorker.MessageString(e.Data);
+            string MessageString = null;
+            if (AuxiliaryServerWorker.MessageString(e.Data).StartsWith("�PNG") == false)
+            {
+                MessageString = AuxiliaryServerWorker.MessageString(e.Data);
+            }
+            else
+            {
+                MessageString = "[Image]";
+            }
             AuxiliaryServerWorker.WriteToConsole("[DEBUG] " + MessageString);
             if (MessageString.StartsWith("/NewConnection"))//NewConnection -U Username -P Password.
             {
-                DoAuthentication(MessageString, e);
+                Thread AuthenticationThread = new Thread(() => DoAuthentication(MessageString, e));
+                AuthenticationThread.Start();
             }
             if(MessageString.StartsWith("/EndConnection"))//EndConnection -U Username -P Password.
             {
-                EndSession(MessageString, e);
+                Thread EndSessionThread = new Thread(() => EndSession(MessageString, e));
+                EndSessionThread.Start();
             }
             if(MessageString.StartsWith("/Message"))//Message -U Username -Content Msg..
             {
-                HandleMessage(MessageString, e);
+                Thread MessageThread = new Thread(() => HandleMessage(MessageString, e));
+                MessageThread.Start();
             }
             if(MessageString.StartsWith("/UpdateStatus"))//UpdateStatus -U Username -Content Msg.
             {
-                UpdateStatus(MessageString, e);
+                Thread StatusUpdater = new Thread(() => UpdateStatus(MessageString, e));
+                StatusUpdater.Start();
             }
             if(MessageString.StartsWith("/UpdateProfilePicture"))//UdateProfilePicture
             {
-                UpdateProfilePictureModeStart(e);
+                Thread ProfilePictureMode = new Thread(() => UpdateProfilePictureModeStart(e));
+                ProfilePictureMode.Start();
             }
             if(MessageString.StartsWith("/SendFriendRequest"))//SendFriendRequest -U Username -Content UserToAdd.
             {
@@ -249,24 +282,31 @@ namespace AntVault2Server.ServerWorkers
             }
             if(MessageString.StartsWith("/RequestFriendsList"))//RequestFriendsList -U Username.
             {
-                SendFriendsList(MessageString, e);
+                Thread FriendsListSender = new Thread(() => SendFriendsList(MessageString, e));//Last important info sent <----
+                FriendsListSender.Start();
             }
             if(MessageString.StartsWith("/RequestProfilePictures"))//RequestProfilePictures -U Username.
             {
-                SendProfilePictures(MessageString, e);
+                Thread ProfilePictureSender = new Thread(() => SendProfilePictures(MessageString, e));
+                ProfilePictureSender.Start();
             }
             if(MessageString.StartsWith("/RequestStatus"))//RequestStatus -U Username.
             {
-                SendStatus(MessageString, e);
+                Thread StatusSender = new Thread(() => SendStatus(MessageString, e));
+                StatusSender.Start();
             }
             if(MessageString.StartsWith("/RequestUsers"))//RequestUsers -U Username.
             {
-                SendUsers(MessageString, e);
+                Thread UsersSender = new Thread(() => SendUsers(MessageString, e));
+                UsersSender.Start();
             }
             if(UpdatingProfilePicture == true && MessageString.StartsWith("/UpdateProfilePicture") == false)//UpdateProfilePicture
             {
-                UpdateProfilePicture(e);
-                ProfilePictureUpdatePulse(e);
+                Thread ProfilepictureUpdater = new Thread(() => UpdateProfilePicture(e));
+                ProfilepictureUpdater.Start();
+                Thread ProfilePictureUpdaterPulse = new Thread(() => ProfilePictureUpdatePulse(e));
+                ProfilePictureUpdaterPulse.Start();
+                UpdatingProfilePicture = false;
             }
         }
 
@@ -314,7 +354,6 @@ namespace AntVault2Server.ServerWorkers
                     AuxiliaryServerWorker.WriteToConsole("[INFO] Profile picture update request finsihed successfully for " + Sender);
                 }
             }
-            UpdatingProfilePicture = false;
         }
 
         private static void SendUsers(string MessageString, DataReceivedFromClientEventArgs Client)//SendUsers, byte[] UsersList
@@ -339,7 +378,7 @@ namespace AntVault2Server.ServerWorkers
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " requested to update their profile picture cache");
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/SendProfilePictures")); //SendProfilePictures
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.ProfilePictureBytes(AuxiliaryServerWorker.ProfilePictures));
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successfully sent profile picture cache to user " + Sender);
         }
@@ -436,7 +475,7 @@ namespace AntVault2Server.ServerWorkers
             string Password = AuxiliaryServerWorker.GetElement(MessageString, "-P ", ".");
             if (AuxiliaryServerWorker.Usernames.Contains(UsernameC))
             {
-                if (AuxiliaryServerWorker.Passwords[AuxiliaryServerWorker.Usernames.IndexOf(UsernameC)] == Password)
+                if (AuxiliaryServerWorker.Passwords[AuxiliaryServerWorker.Usernames.IndexOf(UsernameC)] == Password)//Client authenticated successfully
                 {
                     Session NewSession = new Session()
                     {
@@ -450,6 +489,10 @@ namespace AntVault2Server.ServerWorkers
                     AuxiliaryServerWorker.Sessions.Add(NewSession);
                     AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.MessageByte("/AcceptConnection"));//AcceptConnection
                     AuxiliaryServerWorker.WriteToConsole("[INFO] Client " + UsernameC + " successfully authenticated! Creating new session file...");
+                    foreach(Session Sess in AuxiliaryServerWorker.Sessions)
+                    {
+                        AntVaultServer.Send(Sess.IpPort,"/UserConnected -U " + UsernameC + ".");
+                    }
                     if (File.Exists(UserDirectories + UsernameC + "\\" + UsernameC + "_lastsession.AntSession"))
                     {
                         try

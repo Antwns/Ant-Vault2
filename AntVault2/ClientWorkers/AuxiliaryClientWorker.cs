@@ -47,8 +47,15 @@ namespace AntVault2Client.ClientWorkers
             {
                 ProfilePictureStream.Write(ArrayToConvert, 0, ArrayToConvert.Length);
                 ProfilePictureStream.Seek(0, SeekOrigin.Begin);
-                Collection<Bitmap> PicturesToReturn = (Collection<Bitmap>)ProfilePictureFormatter.Deserialize(ProfilePictureStream);
-                return PicturesToReturn;
+                try
+                {
+                    Collection<Bitmap> PicturesToReturn = (Collection<Bitmap>)ProfilePictureFormatter.Deserialize(ProfilePictureStream);
+                    return PicturesToReturn;
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
 
