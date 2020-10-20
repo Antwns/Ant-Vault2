@@ -32,7 +32,15 @@ namespace AntVault2Client.Pages
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            ClientWorkers.LoginClientWorker.DoAuthentication(UserNameTextBox.Text, PasswordTextBox.Text);
+            ClientWorkers.LoginClientWorker.DoAuthentication(UserNameTextBox.Text, PasswordTextBox.Password);
+        }
+
+        private void PasswordTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                ConnectButton_Click(PasswordTextBox, e);
+            }
         }
     }
 }

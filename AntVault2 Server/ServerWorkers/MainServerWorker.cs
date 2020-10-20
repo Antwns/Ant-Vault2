@@ -15,8 +15,8 @@ namespace AntVault2Server.ServerWorkers
         public static string UserDirectories;
         public static bool UpdatingProfilePicture;
 
-        public static WatsonTcpServer AntVaultServer = new WatsonTcpServer("0.0.0.0", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)));
-        public static WatsonTcpServer AntVaultStatusServer = new WatsonTcpServer("0.0.0.0", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)) + 1);
+        internal static WatsonTcpServer AntVaultServer = new WatsonTcpServer("192.168.1.121", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)));
+        internal static WatsonTcpServer AntVaultStatusServer = new WatsonTcpServer("192.168.1.121", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)) + 1);
 
         #region Server setup and controlls
         public static void StartAntVaultStatusServer()
@@ -34,6 +34,11 @@ namespace AntVault2Server.ServerWorkers
         {
             if (SetUpEvents == false)
             {
+                AntVaultServer.Keepalive.EnableTcpKeepAlives = true;
+                AntVaultServer.Keepalive.TcpKeepAliveInterval = 5;
+                AntVaultServer.Keepalive.TcpKeepAliveTime = 5;
+                AntVaultServer.Keepalive.TcpKeepAliveRetryCount = 5;
+                AntVaultServer.Settings.IdleClientTimeoutSeconds = 100;
                 AntVaultServer.Events.ClientConnected += Events_ClientConnected;
                 AntVaultServer.Events.ClientDisconnected += Events_ClientDisconnected;
                 AntVaultServer.Events.MessageReceived += Events_DataReceived;
@@ -43,11 +48,6 @@ namespace AntVault2Server.ServerWorkers
             CheckUserDatabase(AuxiliaryServerWorker.UserDatabaseDir);
             CheckFileFolders();
             AntVaultServer.Start();
-            AntVaultServer.Keepalive.EnableTcpKeepAlives = true;
-            AntVaultServer.Keepalive.TcpKeepAliveInterval = 5;
-            AntVaultServer.Keepalive.TcpKeepAliveTime = 5;
-            AntVaultServer.Keepalive.TcpKeepAliveRetryCount = 5;
-            AntVaultServer.Settings.IdleClientTimeoutSeconds = 100;
             AuxiliaryServerWorker.WriteToConsole("[INFO] Server started on port " + AuxiliaryServerWorker.ReadFromConfig(true,false));
         }
 
@@ -165,12 +165,12 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] Validated " + Validated + " file directories and created " + Created + " new ones that were missing");
         }
 
-        public static void StopAntVaultServer()
+        public static void StopAntVaultServer(WatsonTcpServer Server)
         {
             foreach (string Client in AntVaultServer.ListClients())
             {
                 AuxiliaryServerWorker.WriteToConsole("[INFO] Disconnecting client " + Client);
-                AntVaultServer.DisconnectClient(Client);
+                Server.DisconnectClient(Client);
             }
             AuxiliaryServerWorker.WriteToConsole("[INFO] Clearing arrays...");
             AuxiliaryServerWorker.Usernames.Clear();
@@ -180,14 +180,20 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.Sessions.Clear();
             AuxiliaryServerWorker.Statuses.Clear();
             AuxiliaryServerWorker.WriteToConsole("[INFO] Arrays cleared");
-            AntVaultServer.Stop();
+            if (Server.IsListening == true)
+            {
+                Server.Stop();
+            }
             AuxiliaryServerWorker.WriteToConsole("[INFO] Server stopped");
             SetUpEvents = false;
         }
-        internal static void StopAntVaultStatusServer()
+        internal static void StopAntVaultStatusServer(WatsonTcpServer Server)
         {
-            AntVaultStatusServer.Stop();
-            AuxiliaryServerWorker.WriteToConsole("[INFO] Status server stopped");
+            if (Server.IsListening == true)
+            {
+                Server.Stop();
+                AuxiliaryServerWorker.WriteToConsole("[INFO] Status server stopped");
+            }
         }
 
         #endregion

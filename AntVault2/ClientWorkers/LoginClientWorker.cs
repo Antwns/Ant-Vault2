@@ -15,7 +15,6 @@ namespace AntVault2Client.ClientWorkers
         internal static void SetUpClients()
         {
             Thread StatusCheckThread = new Thread(StatusCheckThreadWork);
-
             StatusCheckThread.Start();
             AntVaultClient.Events.MessageReceived += MainClientWorker.AntVaultClient_DataReceived;
         }
@@ -35,14 +34,14 @@ namespace AntVault2Client.ClientWorkers
             catch
             {
                 Thread.Sleep(1000);
-                StatusCheckThreadWork();
                 CanConnect = false;
                 WindowControllers.MainWindowController.MainWindow.Dispatcher.Invoke(() =>
                 {
                     WindowControllers.MainWindowController.LoginPage.ServerStatusEllipse.Fill = Brushes.Red;
                 });
             }
-            StatusCheckThreadWork();
+            Thread StatusCheckThread = new Thread(StatusCheckThreadWork);
+            StatusCheckThread.Start();
         }
 
         internal static void DoAuthentication(string Username, string Password)

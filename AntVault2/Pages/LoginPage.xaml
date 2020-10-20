@@ -40,8 +40,8 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock TextWrapping="Wrap" Text="UserName" Margin="0" FontSize="12" Grid.Column="1" TextAlignment="Center"/>
                 <TextBlock Margin="0" Grid.Row="2" FontSize="12" TextWrapping="Wrap" Text="Password" Grid.Column="1" TextAlignment="Center"/>
-                <TextBox x:Name="UserNameTextBox" Margin="0,0,0,0" FontSize="20" Grid.Row="1" TextWrapping="Wrap" Text="" Background="#FF8A55BF" Grid.ColumnSpan="3" Foreground="White"/>
-                <TextBox x:Name="PasswordTextBox" Margin="0,0,0,0" FontSize="20" Grid.Row="3" TextWrapping="Wrap" Text="" Background="#FF8A55BF" Grid.ColumnSpan="3" Foreground="White"/>
+                <TextBox x:Name="UserNameTextBox" Margin="0,0,0,0" FontSize="20" Grid.Row="1" TextWrapping="Wrap" Text="" Background="#FF8A55BF" Grid.ColumnSpan="3" Foreground="White" BorderBrush="White" SelectionBrush="#FFD70000"/>
+                <PasswordBox x:Name="PasswordTextBox" Margin="0" Grid.Row="3" Grid.ColumnSpan="3" BorderBrush="White" Background="#FF8A55BF" Foreground="White" SelectionBrush="#FFD70000" FontSize="20" KeyDown="PasswordTextBox_KeyDown"/>
             </Grid>
         </GroupBox>
         <TextBlock x:Name="WelcomeLabel" HorizontalAlignment="Center" Margin="0" TextWrapping="Wrap" Text="Welcome to AntVault" VerticalAlignment="Center" Foreground="White" FontSize="36" Width="350" Height="56" Grid.Column="1">

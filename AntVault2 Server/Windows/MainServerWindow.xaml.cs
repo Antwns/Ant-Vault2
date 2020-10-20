@@ -40,8 +40,8 @@ namespace AntVault2Server.Windows
 
         private void ServerStopButton_Click(object sender, RoutedEventArgs e)
         {
-            MainServerWorker.StopAntVaultStatusServer();
-            MainServerWorker.StopAntVaultServer();
+            MainServerWorker.StopAntVaultStatusServer(MainServerWorker.AntVaultStatusServer);
+            MainServerWorker.StopAntVaultServer(MainServerWorker.AntVaultServer);
             ServerStopButton.IsEnabled = false;
             ServerStartButton.IsEnabled = true;
         }

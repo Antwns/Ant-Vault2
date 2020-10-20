@@ -291,7 +291,7 @@ namespace AntVault2Client.ClientWorkers
 
         internal static void GetCurrentProfilePicture(string CurrentUser)
         {
-            Bitmap CurrentProfilePicture = ProfilePictures[Usernames.IndexOf(CurrentUser)];
+            Bitmap CurrentProfilePicture = new Bitmap(ProfilePictures[Usernames.IndexOf(CurrentUser)]);
             CurrentProfilePicture.Save(AppDomain.CurrentDomain.BaseDirectory + "CurrentProfilePicture.png",ImageFormat.Png);
             MainWindowController.MainWindow.Dispatcher.Invoke(() =>
             {
@@ -317,7 +317,7 @@ namespace AntVault2Client.ClientWorkers
             {
                 MainWindowController.MainWindow.Content = MainWindowController.LoginPage;
                 MainWindowController.LoginPage.UserNameTextBox.Text = null;
-                MainWindowController.LoginPage.PasswordTextBox.Text = null;
+                MainWindowController.LoginPage.PasswordTextBox.Password = null;
                 MainWindowController.MainWindow.Width = 800;
                 MainWindowController.MainWindow.Height = 450;
                 Animations.LoginAnimations.LogoutAnimation(MainWindowController.LoginPage.ConnectButton, MainWindowController.LoginPage.LoginGroupBox, MainWindowController.LoginPage.ServerStatusLabel, MainWindowController.LoginPage.ServerStatusEllipse, MainWindowController.LoginPage.WelcomeLabel);
