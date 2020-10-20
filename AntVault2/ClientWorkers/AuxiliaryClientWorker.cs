@@ -70,34 +70,41 @@ namespace AntVault2Client.ClientWorkers
             try
             {
                 NewProfilePictureBytes = File.ReadAllBytes(NewProfilePictureSelector.FileName);
+                Pages.OptionsPage.ChangedProfilePicture = true;
             }
             catch
             {
                 MessageBox.Show("You did not select an item! Process will be canceled!", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
                 Pages.OptionsPage.ChangedProfilePicture = false;
             }
-            MemoryStream ImageCheckerMemoryStream = new MemoryStream(NewProfilePictureBytes);
-            try
+            if (Pages.OptionsPage.ChangedProfilePicture == true)
             {
-                Image ImageChecker = Image.FromStream(ImageCheckerMemoryStream);
-                if(ImageChecker.Height < 400 && ImageChecker.Width < 400)
+                MemoryStream ImageCheckerMemoryStream = new MemoryStream(NewProfilePictureBytes);
+                try
                 {
-                    Pages.OptionsPage.ChangedProfilePicture = true;
-                    MessageBox.Show("Selected item was of correct format!", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return NewProfilePictureBytes;
+                    Image ImageChecker = Image.FromStream(ImageCheckerMemoryStream);
+                    if (ImageChecker.Height < 400 && ImageChecker.Width < 400)
+                    {
+                        Pages.OptionsPage.ChangedProfilePicture = true;
+                        MessageBox.Show("Selected item was of correct format!", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return NewProfilePictureBytes;
+                    }
+                    else
+                    {
+                        Pages.OptionsPage.ChangedProfilePicture = false;
+                        MessageBox.Show("Selected item was not of correct format, max allowed sizes are 400x400", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return null;
+                    }
                 }
-                else
+                catch
                 {
+                    MessageBox.Show("Selected item was not of image type, please try again", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
                     Pages.OptionsPage.ChangedProfilePicture = false;
-                    MessageBox.Show("Selected item was not of correct format, max allowed sizes are 400x400", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
                     return null;
                 }
-
             }
-            catch
+            else
             {
-                MessageBox.Show("Selected item was not of image type, please try again", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
-                Pages.OptionsPage.ChangedProfilePicture = false;
                 return null;
             }
         }

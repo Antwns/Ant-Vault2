@@ -1,4 +1,4 @@
-﻿using SimpleTcp;
+﻿using WatsonTcp;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -10,22 +10,22 @@ namespace AntVault2Client.ClientWorkers
         public static bool SetUpConnection = false;
         public static string CurrentUser;
         public static bool CanConnect = false;
-        public static SimpleTcpClient AntVaultClient = new SimpleTcpClient("AntMax.ddns.net", 8910, false, null, null);
+        public static WatsonTcpClient AntVaultClient = new WatsonTcpClient("AntMax.ddns.net", 8910);
 
         internal static void SetUpClients()
         {
             Thread StatusCheckThread = new Thread(StatusCheckThreadWork);
 
             StatusCheckThread.Start();
-            AntVaultClient.Events.DataReceived += MainClientWorker.AntVaultClient_DataReceived;
+            AntVaultClient.Events.MessageReceived += MainClientWorker.AntVaultClient_DataReceived;
         }
         internal static void StatusCheckThreadWork()
         {
             try
             {
                 Thread.Sleep(1000);
-                SimpleTcpClient AntVaultStatusChecker = new SimpleTcpClient("AntMax.ddns.net", 8911, false, null, null);
-                AntVaultStatusChecker.Connect();
+                WatsonTcpClient AntVaultStatusChecker = new WatsonTcpClient("AntMax.ddns.net", 8911);
+                AntVaultStatusChecker.Start();
                 CanConnect = true;
                 WindowControllers.MainWindowController.MainWindow.Dispatcher.Invoke(() =>
                 {
@@ -52,7 +52,7 @@ namespace AntVault2Client.ClientWorkers
             {
                 if (SetUpConnection == false)
                 {
-                    AntVaultClient.Connect();
+                    AntVaultClient.Start();
                     AntVaultClient.Keepalive.EnableTcpKeepAlives = true;
                     AntVaultClient.Keepalive.TcpKeepAliveInterval = 5;
                     AntVaultClient.Keepalive.TcpKeepAliveTime = 5;

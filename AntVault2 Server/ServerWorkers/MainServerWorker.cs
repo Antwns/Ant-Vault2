@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
 using AntVault2Server.DataAndResources;
-using SimpleTcp;
+using WatsonTcp;
 using System.Threading;
-using System.Windows.Automation;
-using System.Drawing;
+using System.Diagnostics;
 using System.Windows;
 
 namespace AntVault2Server.ServerWorkers
@@ -16,8 +15,8 @@ namespace AntVault2Server.ServerWorkers
         public static string UserDirectories;
         public static bool UpdatingProfilePicture;
 
-        public static SimpleTcpServer AntVaultServer = new SimpleTcpServer("*", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)), false, null, null);
-        public static SimpleTcpServer AntVaultStatusServer = new SimpleTcpServer("*", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)) + 1, false, null, null);
+        public static WatsonTcpServer AntVaultServer = new WatsonTcpServer("0.0.0.0", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)));
+        public static WatsonTcpServer AntVaultStatusServer = new WatsonTcpServer("0.0.0.0", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)) + 1);
 
         #region Server setup and controlls
         public static void StartAntVaultStatusServer()
@@ -37,7 +36,7 @@ namespace AntVault2Server.ServerWorkers
             {
                 AntVaultServer.Events.ClientConnected += Events_ClientConnected;
                 AntVaultServer.Events.ClientDisconnected += Events_ClientDisconnected;
-                AntVaultServer.Events.DataReceived += Events_DataReceived;
+                AntVaultServer.Events.MessageReceived += Events_DataReceived;
                 SetUpEvents = true;
             }
             CheckConfig(AuxiliaryServerWorker.ConfigFileDir);
@@ -48,7 +47,7 @@ namespace AntVault2Server.ServerWorkers
             AntVaultServer.Keepalive.TcpKeepAliveInterval = 5;
             AntVaultServer.Keepalive.TcpKeepAliveTime = 5;
             AntVaultServer.Keepalive.TcpKeepAliveRetryCount = 5;
-            AntVaultServer.Settings.IdleClientEvaluationIntervalSeconds = 200;
+            AntVaultServer.Settings.IdleClientTimeoutSeconds = 100;
             AuxiliaryServerWorker.WriteToConsole("[INFO] Server started on port " + AuxiliaryServerWorker.ReadFromConfig(true,false));
         }
 
@@ -168,7 +167,7 @@ namespace AntVault2Server.ServerWorkers
 
         public static void StopAntVaultServer()
         {
-            foreach (string Client in AntVaultServer.GetClients())
+            foreach (string Client in AntVaultServer.ListClients())
             {
                 AuxiliaryServerWorker.WriteToConsole("[INFO] Disconnecting client " + Client);
                 AntVaultServer.DisconnectClient(Client);
@@ -239,7 +238,7 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] Received new connection from " + e.IpPort);
         }
 
-        private static void Events_DataReceived(object sender, DataReceivedFromClientEventArgs e)
+        private static void Events_DataReceived(object sender, MessageReceivedFromClientEventArgs e)
         {
             string MessageString = null;
             if (AuxiliaryServerWorker.MessageString(e.Data).StartsWith("�PNG") == false)
@@ -313,7 +312,7 @@ namespace AntVault2Server.ServerWorkers
         #endregion
 
         #region Server handlers
-        private static void ProfilePictureUpdatePulse(DataReceivedFromClientEventArgs Data)
+        private static void ProfilePictureUpdatePulse(MessageReceivedFromClientEventArgs Data)
         {
             string UsernameToUpdate = null;
             foreach(Session Sess in AuxiliaryServerWorker.Sessions)
@@ -331,7 +330,7 @@ namespace AntVault2Server.ServerWorkers
             }
         }
 
-        private static void UpdateProfilePicture(DataReceivedFromClientEventArgs Client)
+        private static void UpdateProfilePicture(MessageReceivedFromClientEventArgs Client)
         {
             string Sender = null;
             foreach(Session Sess in AuxiliaryServerWorker.Sessions)
@@ -356,7 +355,7 @@ namespace AntVault2Server.ServerWorkers
             }
         }
 
-        private static void SendUsers(string MessageString, DataReceivedFromClientEventArgs Client)//SendUsers, byte[] UsersList
+        private static void SendUsers(string MessageString, MessageReceivedFromClientEventArgs Client)//SendUsers, byte[] UsersList
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] Sending users list to " + Sender);
@@ -365,7 +364,7 @@ namespace AntVault2Server.ServerWorkers
             AntVaultServer.Send(Client.IpPort, AuxiliaryServerWorker.ReturnByteArrayFromStringCollection(AuxiliaryServerWorker.Usernames));
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successfully sent users list to " + Sender);
         }
-        private static void SendStatus(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void SendStatus(string MessageString, MessageReceivedFromClientEventArgs Client)
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             string CurrentStatus = AuxiliaryServerWorker.GetStatus(Sender);
@@ -373,7 +372,7 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successully sent " + Sender + "'s status");
         }
 
-        private static void SendProfilePictures(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void SendProfilePictures(string MessageString, MessageReceivedFromClientEventArgs Client)
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " requested to update their profile picture cache");
@@ -383,7 +382,7 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] Successfully sent profile picture cache to user " + Sender);
         }
 
-        private static void SendFriendsList(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void SendFriendsList(string MessageString, MessageReceivedFromClientEventArgs Client)
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", ".");
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " requested to update their friends list");
@@ -393,7 +392,7 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO Successfully updated friends list for user " + Sender);
         }
 
-        private static void SendFriendRequest(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void SendFriendRequest(string MessageString, MessageReceivedFromClientEventArgs Client)
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -Content");
             string Receiver = AuxiliaryServerWorker.GetElement(MessageString, "-Content ", ".");
@@ -423,7 +422,7 @@ namespace AntVault2Server.ServerWorkers
             
         }
 
-        private static void UpdateProfilePictureModeStart(DataReceivedFromClientEventArgs Client)
+        private static void UpdateProfilePictureModeStart(MessageReceivedFromClientEventArgs Client)
         {
             UpdatingProfilePicture = true;
             string Sender = null;
@@ -437,7 +436,7 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] User " + Sender + " sent a profile picture update request");
         }
 
-        private static void UpdateStatus(string MessageString, DataReceivedFromClientEventArgs Client)//UpdateStatus -U Username -Content Msg.
+        private static void UpdateStatus(string MessageString, MessageReceivedFromClientEventArgs Client)//UpdateStatus -U Username -Content Msg.
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -Content");
             string NewStatus = AuxiliaryServerWorker.GetElement(MessageString, "-Content ", ".");
@@ -453,7 +452,7 @@ namespace AntVault2Server.ServerWorkers
             }
         }
 
-        private static void HandleMessage(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void HandleMessage(string MessageString, MessageReceivedFromClientEventArgs Client)
         {
             string Sender = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -Content");
             string Message = AuxiliaryServerWorker.GetElement(MessageString, "-Content ", ".");
@@ -464,12 +463,12 @@ namespace AntVault2Server.ServerWorkers
             }
         }
 
-        private static void EndSession(string MessageString, DataReceivedFromClientEventArgs Client)
+        private static void EndSession(string MessageString, MessageReceivedFromClientEventArgs Client)
         {
             AntVaultServer.Send("*", AuxiliaryServerWorker.MessageByte(MessageString));
         }
 
-        private static void DoAuthentication(string MessageString, DataReceivedFromClientEventArgs Client) //NewConnection -U Username -P Password.
+        private static void DoAuthentication(string MessageString, MessageReceivedFromClientEventArgs Client) //NewConnection -U Username -P Password.
         {
             string UsernameC = AuxiliaryServerWorker.GetElement(MessageString, "-U ", " -P");
             string Password = AuxiliaryServerWorker.GetElement(MessageString, "-P ", ".");

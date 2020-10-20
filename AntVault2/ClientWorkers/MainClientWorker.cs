@@ -1,8 +1,8 @@
 ﻿using AntVault2Client.WindowControllers;
-using SimpleTcp;
 using System;
 using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
+using WatsonTcp;
 
 namespace AntVault2Client.ClientWorkers
 {
@@ -26,7 +27,7 @@ namespace AntVault2Client.ClientWorkers
         static bool ReceivingProfilePictureUpdatePulse = false;
         static bool ReceivingFriendsList = false;
         static bool SenderDefined = false;
-        internal static void AntVaultClient_DataReceived(object sender, DataReceivedFromServerEventArgs e)
+        internal static void AntVaultClient_DataReceived(object sender, MessageReceivedFromServerEventArgs e)
         {
             string MessageString = AuxiliaryClientWorker.MessageString(e.Data);
             if (MessageString.StartsWith("/AcceptConnection"))
@@ -128,7 +129,7 @@ namespace AntVault2Client.ClientWorkers
             }
         }
 
-        private static void HandleNewUser(string MessageString, DataReceivedFromServerEventArgs e)
+        private static void HandleNewUser(string MessageString, MessageReceivedFromServerEventArgs e)
         {
             string Sender = AuxiliaryClientWorker.GetElement(MessageString, "-U ", ".");
             RequestUsersList(LoginClientWorker.CurrentUser);

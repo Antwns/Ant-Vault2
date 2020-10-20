@@ -39,7 +39,7 @@
             <ColumnDefinition Width="100*"/>
             <ColumnDefinition Width="25*"/>
         </Grid.ColumnDefinitions>
-        <Ellipse x:Name="UserProfilePicture" HorizontalAlignment="Center" Margin="0" Stroke="Black" VerticalAlignment="Center" Width="80" Height="80" Grid.Column="3" Grid.RowSpan="2" MouseLeftButtonDown="UserProfilePicture_MouseLeftButtonDown">
+        <Ellipse x:Name="UserProfilePicture" HorizontalAlignment="Left" Margin="0" Stroke="Black" VerticalAlignment="Center" Width="80" Height="80" Grid.Column="3" Grid.RowSpan="2" MouseLeftButtonDown="UserProfilePicture_MouseLeftButtonDown">
             <Ellipse.Fill>
                 <ImageBrush Stretch="UniformToFill"/>
             </Ellipse.Fill>
@@ -51,7 +51,7 @@
         <Button x:Name="OptionsButton" Content="Options" Grid.Column="1" Margin="0" Background="#FF8A55BF" Foreground="White" Grid.Row="10" FontSize="14" BorderBrush="Black" MouseEnter="OptionsButton_MouseEnter" Click="OptionsButton_Click"/>
         <Button x:Name="YourFilesButton" Content="Your files" Margin="0" Background="#FF8A55BF" Foreground="White" FontSize="14" BorderBrush="Black" Grid.Column="1" Grid.Row="8" MouseEnter="YourFilesButton_MouseEnter"/>
         <TextBox x:Name="StatusTextBox" Grid.Row="3" TextWrapping="Wrap" Text="" Grid.Column="1" Margin="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.ColumnSpan="3" BorderBrush="Black" KeyDown="StatusTextBox_KeyDown" MaxLines="2" MaxLength="78" SelectionBrush="#FF7742C3"/>
-        <Label x:Name="UserNameLabel" Content="UserName" Margin="0" Background="{x:Null}" Foreground="#FF00FFDC" FontSize="26" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0" Grid.Column="1" Grid.RowSpan="2"/>
+        <Label x:Name="UserNameLabel" Content="UserName" Margin="0" Background="{x:Null}" Foreground="#FF00FFDC" FontSize="26" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right"/>
         <Label x:Name="StatusLabel" Content="Status" Background="{x:Null}" Foreground="#FF00FFDC" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="3"/>
         <TextBox x:Name="FriendsTextBox" Grid.Row="5" TextWrapping="Wrap" Text="Friends" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderBrush="Black" Margin="0" Grid.ColumnSpan="3" Grid.RowSpan="2" IsReadOnly="True" SelectionBrush="{x:Null}"/>
         <Label x:Name="FriendsLabel" Content="Friends" Background="{x:Null}" Foreground="#FF00FFDC" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0" Grid.Row="4" Grid.ColumnSpan="3" Grid.Column="1"/>
