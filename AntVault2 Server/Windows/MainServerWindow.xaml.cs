@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,15 +33,15 @@ namespace AntVault2Server.Windows
 
         private void ServerStartButton_Click(object sender, RoutedEventArgs e)
         {
-            MainServerWorker.StartAntVaultStatusServer();
-            MainServerWorker.StartAntVaultServer();
+            Thread ServerStartThread = new Thread(()=>MainServerWorker.StartAntVaultServer());
+            ServerStartThread.IsBackground = true;
+            ServerStartThread.Start();
             ServerStartButton.IsEnabled = false;
             ServerStopButton.IsEnabled = true;
         }
 
         private void ServerStopButton_Click(object sender, RoutedEventArgs e)
         {
-            MainServerWorker.StopAntVaultStatusServer(MainServerWorker.AntVaultStatusServer);
             MainServerWorker.StopAntVaultServer(MainServerWorker.AntVaultServer);
             ServerStopButton.IsEnabled = false;
             ServerStartButton.IsEnabled = true;

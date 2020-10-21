@@ -1,12 +1,8 @@
 ﻿using AntVault2Client.WindowControllers;
 using System;
 using System.Collections.ObjectModel;
-using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -71,7 +67,6 @@ namespace AntVault2Client.ClientWorkers
                 else if (MessageString.StartsWith("/SendProfilePicures") == false && ReceivingProfilePictures == true)
                 {
                     ReceivingProfilePictures = false;
-                    File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "This.txt", MessageString);
                     ProfilePictures = AuxiliaryClientWorker.GetPicturesFromBytes(e.Data);//
                     GetCurrentProfilePicture(LoginClientWorker.CurrentUser);
                     RequestStatus(LoginClientWorker.CurrentUser);

@@ -16,20 +16,8 @@ namespace AntVault2Server.ServerWorkers
         public static bool UpdatingProfilePicture;
 
         internal static WatsonTcpServer AntVaultServer = new WatsonTcpServer("192.168.1.121", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)));
-        internal static WatsonTcpServer AntVaultStatusServer = new WatsonTcpServer("192.168.1.121", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)) + 1);
 
         #region Server setup and controlls
-        public static void StartAntVaultStatusServer()
-        {
-            Thread StatusServerThread = new Thread(StatusThreadWork);
-            StatusServerThread.Start();
-        }
-
-        public static void StatusThreadWork()
-        {
-            AntVaultStatusServer.Start();
-            AuxiliaryServerWorker.WriteToConsole("[INFO] Status server started on port " + AuxiliaryServerWorker.ReadFromConfig(true, false) + 1);
-        }
         public static void StartAntVaultServer()
         {
             if (SetUpEvents == false)
@@ -38,10 +26,11 @@ namespace AntVault2Server.ServerWorkers
                 AntVaultServer.Keepalive.TcpKeepAliveInterval = 5;
                 AntVaultServer.Keepalive.TcpKeepAliveTime = 5;
                 AntVaultServer.Keepalive.TcpKeepAliveRetryCount = 5;
-                AntVaultServer.Settings.IdleClientTimeoutSeconds = 100;
+                AntVaultServer.Settings.Logger = AuxiliaryServerWorker.WriteToConsole;
                 AntVaultServer.Events.ClientConnected += Events_ClientConnected;
                 AntVaultServer.Events.ClientDisconnected += Events_ClientDisconnected;
                 AntVaultServer.Events.MessageReceived += Events_DataReceived;
+                AntVaultServer.Events.ExceptionEncountered += Events_ExceptionEncountered;
                 SetUpEvents = true;
             }
             CheckConfig(AuxiliaryServerWorker.ConfigFileDir);
@@ -49,6 +38,11 @@ namespace AntVault2Server.ServerWorkers
             CheckFileFolders();
             AntVaultServer.Start();
             AuxiliaryServerWorker.WriteToConsole("[INFO] Server started on port " + AuxiliaryServerWorker.ReadFromConfig(true,false));
+        }
+
+        private static void Events_ExceptionEncountered(object sender, ExceptionEventArgs e)
+        {
+            File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "Errors.txt", e.Json);
         }
 
         private static void CheckUserDatabase(string UserDatabaseDir)
@@ -75,7 +69,7 @@ namespace AntVault2Server.ServerWorkers
             }
         }
 
-        private static void CheckConfig(string ConfigFileDir)
+        internal static void CheckConfig(string ConfigFileDir)
         {
             if (File.Exists(ConfigFileDir))
             {
@@ -182,18 +176,17 @@ namespace AntVault2Server.ServerWorkers
             AuxiliaryServerWorker.WriteToConsole("[INFO] Arrays cleared");
             if (Server.IsListening == true)
             {
-                Server.Stop();
+                try
+                {
+                    Server.Stop();
+                }
+                catch(Exception exc)
+                {
+                    MessageBox.Show(exc.ToString());
+                }
             }
             AuxiliaryServerWorker.WriteToConsole("[INFO] Server stopped");
             SetUpEvents = false;
-        }
-        internal static void StopAntVaultStatusServer(WatsonTcpServer Server)
-        {
-            if (Server.IsListening == true)
-            {
-                Server.Stop();
-                AuxiliaryServerWorker.WriteToConsole("[INFO] Status server stopped");
-            }
         }
 
         #endregion

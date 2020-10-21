@@ -6,7 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Windows.Controls;
 
 namespace AntVault2Server.ServerWorkers
 {
@@ -34,6 +33,10 @@ namespace AntVault2Server.ServerWorkers
         }
         public static string ReadFromConfig(bool ReadPort, bool ReadUserDirectories)
         {
+            if (File.Exists(ConfigFileDir) == false)
+            {
+                MainServerWorker.CheckConfig(ConfigFileDir);
+            }
             StreamReader ConfigStreamReader = new StreamReader(ConfigFileDir);
             string CurrentLine;
             int LineNumber = 0;

@@ -65,6 +65,8 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+    <Optimize>true</Optimize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -99,8 +101,8 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="WatsonTcp, Version=4.4.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\WatsonTcp.4.4.0.1\lib\net461\WatsonTcp.dll</HintPath>
+    <Reference Include="WatsonTcp, Version=4.4.0.3, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\WatsonTcp.4.4.0.3\lib\net461\WatsonTcp.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
