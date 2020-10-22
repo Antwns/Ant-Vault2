@@ -3,7 +3,6 @@ using System.IO;
 using AntVault2Server.DataAndResources;
 using WatsonTcp;
 using System.Threading;
-using System.Diagnostics;
 using System.Windows;
 
 namespace AntVault2Server.ServerWorkers
@@ -15,7 +14,7 @@ namespace AntVault2Server.ServerWorkers
         public static string UserDirectories;
         public static bool UpdatingProfilePicture;
 
-        internal static WatsonTcpServer AntVaultServer = new WatsonTcpServer("192.168.1.121", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)));
+        internal static WatsonTcpServer AntVaultServer = new WatsonTcpServer("192.168.1.39", Convert.ToInt32(AuxiliaryServerWorker.ReadFromConfig(true, false)));
 
         #region Server setup and controlls
         public static void StartAntVaultServer()

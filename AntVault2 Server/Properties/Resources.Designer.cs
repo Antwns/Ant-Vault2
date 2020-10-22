@@ -61,7 +61,7 @@ namespace AntVault2Server.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to /Port 8910.
+        ///   Looks up a localized string similar to /Port 25566.
         ////UserDirectories $UserDirectories$..
         /// </summary>
         internal static string DefaultConfig {
