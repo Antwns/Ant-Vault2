@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntVault2Client", "Ant Vault2\AntVault2Client.csproj", "{1161DC93-CBFA-4194-8607-4255F20A1265}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AntVault2Server", "AntVault2Server\AntVault2Server.csproj", "{77C1D534-7602-4A92-8FAA-A1B099C27C70}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1161DC93-CBFA-4194-8607-4255F20A1265}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1161DC93-CBFA-4194-8607-4255F20A1265}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1161DC93-CBFA-4194-8607-4255F20A1265}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1161DC93-CBFA-4194-8607-4255F20A1265}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77C1D534-7602-4A92-8FAA-A1B099C27C70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C1D534-7602-4A92-8FAA-A1B099C27C70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C1D534-7602-4A92-8FAA-A1B099C27C70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C1D534-7602-4A92-8FAA-A1B099C27C70}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4072C14-F28B-487D-A64D-32540E9DDF91}
+	EndGlobalSection
+EndGlobal

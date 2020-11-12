@@ -1,0 +1,9 @@
+﻿<Application x:Class="AntVault2.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AntVault2Client"
+             StartupUri="Windows\WindowLoader.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
